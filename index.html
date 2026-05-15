@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Divisor de PDFs</title>
+    <title>Herramientas PDF</title>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     
@@ -28,11 +28,57 @@
         .card {
             background: #ffffff;
             width: 100%;
-            max-width: 480px;
+            max-width: 520px;
             padding: 40px;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Sistema de Pestañas Minimalista */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 32px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 12px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            font-size: 15px;
+            font-weight: 500;
+            color: #666666;
+            cursor: pointer;
+            padding: 4px 12px;
+            position: relative;
+            width: auto;
+            transition: color 0.2s;
+        }
+
+        .tab-btn.active {
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -13px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #0f172a;
+        }
+
+        .tab-content {
+            display: none;
             text-align: center;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         h2 {
@@ -47,7 +93,7 @@
             font-size: 14px;
             color: #666666;
             line-height: 1.5;
-            margin-bottom: 32px;
+            margin-bottom: 24px;
         }
 
         .upload-area {
@@ -82,7 +128,6 @@
             font-weight: 500;
         }
 
-        /* Ocultar el input original pero mantenerlo funcional */
         input[type="file"] {
             position: absolute;
             top: 0;
@@ -93,7 +138,59 @@
             cursor: pointer;
         }
 
-        button {
+        /* Lista de archivos para ordenar */
+        .file-list {
+            text-align: left;
+            margin-bottom: 24px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #f0f0f0;
+            border-radius: 6px;
+            padding: 8px;
+            background: #fbfbfb;
+            display: none;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .file-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 70%;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .order-btn {
+            background: #f1f5f9;
+            color: #334155;
+            border: none;
+            padding: 4px 8px;
+            font-size: 11px;
+            border-radius: 3px;
+            cursor: pointer;
+            width: auto;
+        }
+
+        .order-btn:hover {
+            background: #e2e8f0;
+        }
+
+        button.action-btn {
             width: 100%;
             background-color: #0f172a;
             color: #ffffff;
@@ -106,22 +203,22 @@
             transition: background-color 0.2s, transform 0.1s;
         }
 
-        button:hover {
+        button.action-btn:hover {
             background-color: #1e293b;
         }
 
-        button:active {
+        button.action-btn:active {
             transform: scale(0.99);
         }
 
-        button:disabled {
+        button.action-btn:disabled {
             background-color: #e2e8f0;
             color: #94a3b8;
             cursor: not-allowed;
             transform: none;
         }
 
-        #status {
+        .status-box {
             margin-top: 24px;
             padding: 12px 16px;
             border-radius: 6px;
@@ -131,43 +228,51 @@
             text-align: center;
         }
 
-        .info { 
-            background-color: #f1f5f9; 
-            color: #475569; 
-        }
-        
-        .success { 
-            background-color: #f0fdf4; 
-            color: #166534; 
-            border: 1px solid #bbf7d0;
-        }
-        
-        .error { 
-            background-color: #fef2f2; 
-            color: #991b1b; 
-            border: 1px solid #fecaca;
-        }
+        .info { background-color: #f1f5f9; color: #475569; }
+        .success { background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .error { background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>Divisor de PDFs</h2>
-    <p class="subtitle">Los archivos se agruparán cada 2 páginas y se descargarán automáticamente en un único archivo comprimido .ZIP</p>
-    
-    <div class="upload-area">
-        <div class="upload-icon">📄</div>
-        <div class="upload-text" id="file-label">Seleccionar o arrastrar PDF</div>
-        <input type="file" id="pdf-file" accept=".pdf">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('tab-dividir')">Dividir PDFs</button>
+        <button class="tab-btn" onclick="switchTab('tab-unir')">Unir PDFs</button>
     </div>
 
-    <button id="btn-procesar">Procesar y descargar ZIP</button>
+    <div id="tab-dividir" class="tab-content active">
+        <h2>Divisor de PDFs</h2>
+        <p class="subtitle">Sube tus archivos. Se agruparán cada 2 páginas y se descargarán en carpetas dentro de un .ZIP</p>
+        
+        <div class="upload-area">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text" id="div-label">Seleccionar o arrastrar PDFs</div>
+            <input type="file" id="div-file" accept=".pdf" multiple>
+        </div>
+        <button id="btn-dividir" class="action-btn">Procesar y descargar ZIP</button>
+        <div id="status-dividir" class="status-box"></div>
+    </div>
 
-    <div id="status"></div>
+    <div id="tab-unir" class="tab-content">
+        <h2>Unidor de PDFs</h2>
+        <p class="subtitle">Sube los archivos y acomoda el orden usando los botones antes de fusionarlos en uno solo.</p>
+        
+        <div class="upload-area">
+            <div class="upload-icon">➕</div>
+            <div class="upload-text" id="unir-label">Seleccionar archivos a unir</div>
+            <input type="file" id="unir-file" accept=".pdf" multiple>
+        </div>
+        
+        <div class="file-list" id="lista-archivos"></div>
+
+        <button id="btn-unir" class="action-btn">Fusionar y descargar PDF</button>
+        <div id="status-unir" class="status-box"></div>
+    </div>
 </div>
 
 <script>
-    const _0x16034b=_0x4814;(function(_0x5b290f,_0x3b791e){const _0x44d4da={_0x233d01:0x1d9,_0x5117c5:0x1ed,_0x5ad3e4:0x220,_0x197df0:0x207,_0x5680e0:0x229,_0x5151be:0x1f1},_0x12a6f1=_0x4814,_0x43dfb5=_0x5b290f();while(!![]){try{const _0x1f07bd=parseInt(_0x12a6f1(_0x44d4da._0x233d01))/0x1*(-parseInt(_0x12a6f1(_0x44d4da._0x5117c5))/0x2)+-parseInt(_0x12a6f1(_0x44d4da._0x5ad3e4))/0x3*(parseInt(_0x12a6f1(_0x44d4da._0x197df0))/0x4)+parseInt(_0x12a6f1(_0x44d4da._0x5680e0))/0x5*(parseInt(_0x12a6f1(0x20f))/0x6)+-parseInt(_0x12a6f1(0x223))/0x7+parseInt(_0x12a6f1(_0x44d4da._0x5151be))/0x8+parseInt(_0x12a6f1(0x212))/0x9+parseInt(_0x12a6f1(0x22a))/0xa*(parseInt(_0x12a6f1(0x1f9))/0xb);if(_0x1f07bd===_0x3b791e)break;else _0x43dfb5['push'](_0x43dfb5['shift']());}catch(_0x20d074){_0x43dfb5['push'](_0x43dfb5['shift']());}}}(_0x39e1,0x52ca8));if(window[_0x16034b(0x1f5)][_0x16034b(0x1fe)]!==_0x16034b(0x1e2)){document[_0x16034b(0x1e7)](_0x16034b(0x228),()=>{const _0x495ca2={_0x77095:0x1df,_0x54b6d8:0x1ef},_0x29f436=_0x16034b;document[_0x29f436(_0x495ca2._0x77095)]['innerHTML']=_0x29f436(_0x495ca2._0x54b6d8);});throw new Error(_0x16034b(0x224));}function switchTab(_0x3091a8){const _0x351e67={_0x511ddb:0x1db,_0x312bc6:0x1f6,_0xea0d03:0x22f,_0x1a415e:0x1e3,_0x1ea7b5:0x1e6,_0x43150c:0x1dc,_0x8c428c:0x214},_0x47f1a8=_0x16034b;document[_0x47f1a8(0x1f6)](_0x47f1a8(_0x351e67._0x511ddb))['forEach'](_0x143fc7=>_0x143fc7['classList'][_0x47f1a8(0x213)](_0x47f1a8(0x1e6))),document[_0x47f1a8(_0x351e67._0x312bc6)](_0x47f1a8(0x1e9))[_0x47f1a8(_0x351e67._0xea0d03)](_0xe792f7=>_0xe792f7[_0x47f1a8(0x1dc)][_0x47f1a8(0x213)](_0x47f1a8(0x1e6))),event[_0x47f1a8(_0x351e67._0x1a415e)]['classList']['add'](_0x47f1a8(_0x351e67._0x1ea7b5)),document[_0x47f1a8(0x230)](_0x3091a8)[_0x47f1a8(_0x351e67._0x43150c)][_0x47f1a8(_0x351e67._0x8c428c)]('active');}const divInput=document[_0x16034b(0x230)](_0x16034b(0x203)),divLabel=document['getElementById'](_0x16034b(0x20b));divInput[_0x16034b(0x1e7)](_0x16034b(0x20e),()=>{const _0xb0281d={_0x3dc765:0x210,_0x37e147:0x1f8,_0x46b140:0x211,_0x14782c:0x21b,_0x65b7ec:0x22b,_0x9f1eaf:0x218},_0x3f63fd=_0x16034b;divInput[_0x3f63fd(_0xb0281d._0x3dc765)]['length']>0x0?(divLabel[_0x3f63fd(_0xb0281d._0x37e147)]=divInput['files'][_0x3f63fd(_0xb0281d._0x46b140)]===0x1?divInput['files'][0x0][_0x3f63fd(0x21c)]:divInput[_0x3f63fd(_0xb0281d._0x3dc765)]['length']+'\x20archivos\x20seleccionados',divLabel['style'][_0x3f63fd(0x1fc)]=_0x3f63fd(_0xb0281d._0x14782c)):(divLabel['innerText']=_0x3f63fd(_0xb0281d._0x65b7ec),divLabel[_0x3f63fd(0x1f0)][_0x3f63fd(0x1fc)]=_0x3f63fd(_0xb0281d._0x9f1eaf));}),document[_0x16034b(0x230)](_0x16034b(0x1e4))[_0x16034b(0x1e7)](_0x16034b(0x1fb),async()=>{const _0x24292b={_0x2e3e8b:0x230,_0x4c5a9a:0x1fa,_0x4c352a:0x1e0,_0x48c860:0x22e,_0x382a42:0x210,_0x5b54ff:0x21c,_0x245bc7:0x226,_0x4f4a10:0x217,_0x37c2f3:0x215,_0x116123:0x216,_0x291b4c:0x232,_0x3d564d:0x205,_0x5e6d6b:0x20c,_0x5a9c38:0x1e0},_0x26b9a5=_0x16034b,_0x3918b9=document[_0x26b9a5(0x230)](_0x26b9a5(0x1ea)),_0x5849ef=document[_0x26b9a5(_0x24292b._0x2e3e8b)](_0x26b9a5(0x1e4));if(divInput[_0x26b9a5(0x210)]['length']===0x0)return msg(_0x3918b9,_0x26b9a5(_0x24292b._0x4c5a9a),_0x26b9a5(0x1f3));_0x5849ef[_0x26b9a5(_0x24292b._0x4c352a)]=!![],msg(_0x3918b9,_0x26b9a5(_0x24292b._0x48c860),_0x26b9a5(0x1f2));try{const _0x1c56e1=new JSZip();let _0x2ac82c=0x0,_0x314084=0x0;for(let _0x8e6cc3=0x0;_0x8e6cc3<divInput[_0x26b9a5(0x210)][_0x26b9a5(0x211)];_0x8e6cc3++){const _0x655a36=divInput[_0x26b9a5(_0x24292b._0x382a42)][_0x8e6cc3],_0x4fdc22=_0x655a36[_0x26b9a5(_0x24292b._0x5b54ff)]['replace'](/\.[^/.]+$/,''),_0x36ca9d=_0x1c56e1[_0x26b9a5(_0x24292b._0x245bc7)](_0x4fdc22),_0x205360=await PDFLib[_0x26b9a5(_0x24292b._0x4f4a10)][_0x26b9a5(0x1de)](await _0x655a36[_0x26b9a5(0x1f7)]()),_0x2b8df2=_0x205360[_0x26b9a5(0x22d)]();_0x2ac82c+=_0x2b8df2;let _0x1b5ff3=0x1;for(let _0x678c7f=0x0;_0x678c7f<_0x2b8df2;_0x678c7f+=0x2){const _0x3f1b70=await PDFLib[_0x26b9a5(_0x24292b._0x4f4a10)][_0x26b9a5(_0x24292b._0x37c2f3)](),_0x48311b=[_0x678c7f];if(_0x678c7f+0x1<_0x2b8df2)_0x48311b[_0x26b9a5(_0x24292b._0x116123)](_0x678c7f+0x1);const _0x232fa0=await _0x3f1b70[_0x26b9a5(0x1ec)](_0x205360,_0x48311b);_0x232fa0['forEach'](_0xee57c8=>_0x3f1b70[_0x26b9a5(0x21f)](_0xee57c8)),_0x36ca9d[_0x26b9a5(0x1d8)](_0x4fdc22+'_'+_0x1b5ff3+'.pdf',await _0x3f1b70[_0x26b9a5(_0x24292b._0x291b4c)]()),_0x1b5ff3++,_0x314084++;}}const _0x1f211a=await _0x1c56e1[_0x26b9a5(0x201)]({'type':_0x26b9a5(0x202)});descargarBlob(_0x1f211a,divInput[_0x26b9a5(0x210)][_0x26b9a5(0x211)]===0x1?divInput[_0x26b9a5(_0x24292b._0x382a42)][0x0][_0x26b9a5(0x21c)][_0x26b9a5(_0x24292b._0x3d564d)](/\.[^/.]+$/,'')+_0x26b9a5(_0x24292b._0x5e6d6b):'Lote_Dividido.zip'),msg(_0x3918b9,'Éxito.\x20Se\x20procesaron\x20'+_0x2ac82c+_0x26b9a5(0x206),_0x26b9a5(0x21d));}catch(_0x5a4fda){msg(_0x3918b9,'Error\x20al\x20procesar\x20los\x20archivos.','error');}finally{_0x5849ef[_0x26b9a5(_0x24292b._0x5a9c38)]=![];}});const unirInput=document['getElementById'](_0x16034b(0x20d)),unirLabel=document[_0x16034b(0x230)](_0x16034b(0x209)),listaContenedor=document[_0x16034b(0x230)](_0x16034b(0x225));let listaArchivosGlobal=[];function _0x39e1(){const _0x31f1cc=['PDFDocument','#555555','Error\x20al\x20fusionar\x20los\x20archivos.\x20Revisa\x20que\x20no\x20estén\x20protegidos.','Documento_Fusionado.pdf','#111111','name','success','¡Éxito!\x20Se\x20unieron\x20los\x20','addPage','3RJukRD','Fusionando\x20documentos...\x20Por\x20favor\x20espera.','status-unir','3139493JkXSXS','Ejecución\x20no\x20autorizada.','lista-archivos','folder',',\x20-1)\x22>▲</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22order-btn\x22\x20onclick=\x22moverArchivo(','DOMContentLoaded','557980ZDAZaO','10nuxBWV','Seleccionar\x20o\x20arrastrar\x20PDFs','href','getPageCount','Procesando\x20y\x20estructurando\x20ZIP...','forEach','getElementById','from','save','removeChild','innerHTML','file','263hEwvBE','createElement','.tab-btn','classList','div','load','body','disabled','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22file-name\x22>','sam-vigvita.github.io','target','btn-dividir','className','active','addEventListener','file-item','.tab-content','status-dividir','\x20archivos\x20listos\x20para\x20ordenar','copyPages','3028EATGko','getPageIndices','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-family:sans-serif;\x20text-align:center;\x20margin-top:100px;\x20padding:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h2\x20style=\x22color:#991b1b;\x22>Error</h2>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22color:#555;\x20margin-top:10px;\x22>Esta\x20herramienta\x20no\x20está\x20diseñada\x20para\x20su\x20uso\x20local.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','style','3793192EvsDES','info','error',',\x201)\x22>▼</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','location','querySelectorAll','arrayBuffer','innerText','7222567VBpTAj','Selecciona\x20al\x20menos\x20un\x20archivo.','click','color','createObjectURL','hostname','block','display','generateAsync','blob','div-file','download','replace','\x20páginas\x20organizadas\x20en\x20carpetas.','2202524PuEVvg','none','unir-label','appendChild','div-label','_dividido.zip','unir-file','change','18kEdgMb','files','length','2438010VVHgex','remove','add','create','push'];_0x39e1=function(){return _0x31f1cc;};return _0x39e1();}unirInput[_0x16034b(0x1e7)](_0x16034b(0x20e),()=>{const _0x345cc8={_0x3ae03c:0x210,_0x557426:0x231,_0x3b9c82:0x1f8,_0x10edff:0x211},_0x157f2d=_0x16034b;unirInput[_0x157f2d(_0x345cc8._0x3ae03c)][_0x157f2d(0x211)]>0x0&&(listaArchivosGlobal=Array[_0x157f2d(_0x345cc8._0x557426)](unirInput[_0x157f2d(0x210)]),renderLista(),unirLabel[_0x157f2d(_0x345cc8._0x3b9c82)]=listaArchivosGlobal[_0x157f2d(_0x345cc8._0x10edff)]+_0x157f2d(0x1eb));});function renderLista(){const _0x5c2a79={_0x530526:0x211,_0x6b147:0x200,_0x405d83:0x1ff},_0x44bf9e={_0x3f840e:0x1da,_0x56cb53:0x234,_0x43cfb7:0x227,_0x536b47:0x1f4},_0xd2c531=_0x16034b;listaContenedor[_0xd2c531(0x234)]='';if(listaArchivosGlobal[_0xd2c531(_0x5c2a79._0x530526)]===0x0){listaContenedor['style'][_0xd2c531(_0x5c2a79._0x6b147)]=_0xd2c531(0x208);return;}listaContenedor['style']['display']=_0xd2c531(_0x5c2a79._0x405d83),listaArchivosGlobal[_0xd2c531(0x22f)]((_0x17ae1c,_0x48f95a)=>{const _0x3e0dfa=_0xd2c531,_0x2eb42c=document[_0x3e0dfa(_0x44bf9e._0x3f840e)](_0x3e0dfa(0x1dd));_0x2eb42c[_0x3e0dfa(0x1e5)]=_0x3e0dfa(0x1e8),_0x2eb42c[_0x3e0dfa(_0x44bf9e._0x56cb53)]=_0x3e0dfa(0x1e1)+(_0x48f95a+0x1)+'.\x20'+_0x17ae1c['name']+'</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22file-actions\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22order-btn\x22\x20onclick=\x22moverArchivo('+_0x48f95a+_0x3e0dfa(_0x44bf9e._0x43cfb7)+_0x48f95a+_0x3e0dfa(_0x44bf9e._0x536b47),listaContenedor['appendChild'](_0x2eb42c);});}function _0x4814(_0x44da02,_0x14282e){_0x44da02=_0x44da02-0x1d8;const _0x39e1e1=_0x39e1();let _0x48149b=_0x39e1e1[_0x44da02];return _0x48149b;}window['moverArchivo']=function(_0x3dae42,_0x1fbf1f){const _0x51a347={_0x9d9271:0x211},_0x454c99=_0x16034b,_0xc237fe=_0x3dae42+_0x1fbf1f;if(_0xc237fe<0x0||_0xc237fe>=listaArchivosGlobal[_0x454c99(_0x51a347._0x9d9271)])return;const _0x391f23=listaArchivosGlobal[_0x3dae42];listaArchivosGlobal[_0x3dae42]=listaArchivosGlobal[_0xc237fe],listaArchivosGlobal[_0xc237fe]=_0x391f23,renderLista();},document['getElementById']('btn-unir')['addEventListener'](_0x16034b(0x1fb),async()=>{const _0x58c300={_0x5e8252:0x222,_0x3a2bce:0x211,_0x229370:0x221,_0x5a66fd:0x217,_0x25586a:0x1de,_0x20ce99:0x22f,_0x3bffc0:0x232,_0x342395:0x21e,_0x2cf6e1:0x211,_0x124ab8:0x21d,_0x4bd55e:0x219,_0x5eb02c:0x1f3},_0x2d98f8=_0x16034b,_0x1eb4cd=document[_0x2d98f8(0x230)](_0x2d98f8(_0x58c300._0x5e8252)),_0x1be36b=document[_0x2d98f8(0x230)]('btn-unir');if(listaArchivosGlobal[_0x2d98f8(_0x58c300._0x3a2bce)]<0x2)return msg(_0x1eb4cd,'Selecciona\x20al\x20menos\x202\x20archivos\x20para\x20poder\x20unirlos.','error');_0x1be36b[_0x2d98f8(0x1e0)]=!![],msg(_0x1eb4cd,_0x2d98f8(_0x58c300._0x229370),_0x2d98f8(0x1f2));try{const _0x4b0507=await PDFLib[_0x2d98f8(0x217)]['create']();for(const _0x43747b of listaArchivosGlobal){const _0x4e4204=await PDFLib[_0x2d98f8(_0x58c300._0x5a66fd)][_0x2d98f8(_0x58c300._0x25586a)](await _0x43747b['arrayBuffer']()),_0x51edf1=await _0x4b0507['copyPages'](_0x4e4204,_0x4e4204[_0x2d98f8(0x1ee)]());_0x51edf1[_0x2d98f8(_0x58c300._0x20ce99)](_0x5a9f87=>_0x4b0507[_0x2d98f8(0x21f)](_0x5a9f87));}const _0x313a86=await _0x4b0507[_0x2d98f8(_0x58c300._0x3bffc0)](),_0x3426d3=new Blob([_0x313a86],{'type':'application/pdf'});descargarBlob(_0x3426d3,_0x2d98f8(0x21a)),msg(_0x1eb4cd,_0x2d98f8(_0x58c300._0x342395)+listaArchivosGlobal[_0x2d98f8(_0x58c300._0x2cf6e1)]+'\x20archivos\x20en\x20un\x20solo\x20PDF.',_0x2d98f8(_0x58c300._0x124ab8));}catch(_0x4b3e78){msg(_0x1eb4cd,_0x2d98f8(_0x58c300._0x4bd55e),_0x2d98f8(_0x58c300._0x5eb02c));}finally{_0x1be36b[_0x2d98f8(0x1e0)]=![];}});function msg(_0xfbede,_0x632003,_0x3ed2a3){const _0x491070={_0x138c2a:0x1f0},_0x5d303d=_0x16034b;_0xfbede['innerText']=_0x632003,_0xfbede['className']='status-box\x20'+_0x3ed2a3,_0xfbede[_0x5d303d(_0x491070._0x138c2a)][_0x5d303d(0x200)]=_0x5d303d(0x1ff);}function descargarBlob(_0x260828,_0x237651){const _0x38903a={_0x33b932:0x1fd,_0x297619:0x22c,_0x44ede5:0x1df,_0x407df8:0x20a},_0x489999=_0x16034b,_0x3ab833=URL[_0x489999(_0x38903a._0x33b932)](_0x260828),_0x15ec55=document['createElement']('a');_0x15ec55[_0x489999(_0x38903a._0x297619)]=_0x3ab833,_0x15ec55[_0x489999(0x204)]=_0x237651,document[_0x489999(_0x38903a._0x44ede5)][_0x489999(_0x38903a._0x407df8)](_0x15ec55),_0x15ec55[_0x489999(0x1fb)](),document[_0x489999(0x1df)][_0x489999(0x233)](_0x15ec55),URL['revokeObjectURL'](_0x3ab833);}
+    const _0x4e94c2=_0x56cb;(function(_0x4cce3f,_0x51e372){const _0x4094d4={_0x53048d:0xf6,_0x448a9f:0x11e,_0xb170b6:0x10a,_0x45ffa1:0x10d,_0x5ad321:0x10f,_0x420869:0xfb},_0x410f64=_0x56cb,_0x2be6f7=_0x4cce3f();while(!![]){try{const _0x7b9568=parseInt(_0x410f64(_0x4094d4._0x53048d))/0x1+parseInt(_0x410f64(_0x4094d4._0x448a9f))/0x2*(-parseInt(_0x410f64(0xd1))/0x3)+-parseInt(_0x410f64(0xe0))/0x4+-parseInt(_0x410f64(0xe2))/0x5+parseInt(_0x410f64(0xf2))/0x6*(-parseInt(_0x410f64(_0x4094d4._0xb170b6))/0x7)+parseInt(_0x410f64(_0x4094d4._0x45ffa1))/0x8*(parseInt(_0x410f64(_0x4094d4._0x5ad321))/0x9)+parseInt(_0x410f64(_0x4094d4._0x420869))/0xa;if(_0x7b9568===_0x51e372)break;else _0x2be6f7['push'](_0x2be6f7['shift']());}catch(_0x117f6b){_0x2be6f7['push'](_0x2be6f7['shift']());}}}(_0xc98c,0x5ffa2));if(window[_0x4e94c2(0xe6)][_0x4e94c2(0xd8)]!==_0x4e94c2(0x118)){document[_0x4e94c2(0xed)](_0x4e94c2(0xf7),()=>{const _0x25dd6c={_0x1b2b9c:0xcd},_0x5ed685=_0x4e94c2;document[_0x5ed685(0xea)][_0x5ed685(_0x25dd6c._0x1b2b9c)]='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-family:sans-serif;\x20text-align:center;\x20margin-top:100px;\x20padding:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h2\x20style=\x22color:#991b1b;\x22>Error\x20de\x20Licencia</h2>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22color:#555;\x20margin-top:10px;\x22>Esta\x20herramienta\x20no\x20está\x20autorizada\x20para\x20su\x20uso\x20local\x20o\x20distribución\x20externa.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20';});throw new Error(_0x4e94c2(0xe3));}function switchTab(_0x218b8b){const _0x1a0f5b={_0x483967:0xec,_0x2cab95:0x111,_0x46270c:0xd2,_0x49f558:0xdb,_0x1b3593:0x121,_0x44e104:0x117,_0x1a45c6:0xf1},_0x2fd742=_0x4e94c2;document[_0x2fd742(_0x1a0f5b._0x483967)](_0x2fd742(0x106))[_0x2fd742(_0x1a0f5b._0x2cab95)](_0x4fe21f=>_0x4fe21f['classList'][_0x2fd742(0xcc)](_0x2fd742(0xf1))),document[_0x2fd742(_0x1a0f5b._0x483967)]('.tab-content')[_0x2fd742(_0x1a0f5b._0x2cab95)](_0x3b37f5=>_0x3b37f5[_0x2fd742(0xdb)]['remove'](_0x2fd742(0xf1))),event[_0x2fd742(_0x1a0f5b._0x46270c)][_0x2fd742(_0x1a0f5b._0x49f558)]['add']('active'),document[_0x2fd742(_0x1a0f5b._0x1b3593)](_0x218b8b)[_0x2fd742(0xdb)][_0x2fd742(_0x1a0f5b._0x44e104)](_0x2fd742(_0x1a0f5b._0x1a45c6));}function _0xc98c(){const _0x477fd5=['.pdf','2595344qslFfY','Selecciona\x20al\x20menos\x20un\x20archivo.','2145085JbZGUO','Ejecución\x20no\x20autorizada.','Selecciona\x20al\x20menos\x202\x20archivos\x20para\x20poder\x20unirlos.','style','location','color','removeChild','innerText','body','btn-unir','querySelectorAll','addEventListener','\x20páginas\x20organizadas\x20en\x20carpetas.','createElement','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22file-name\x22>','active','3966devhZm','status-dividir','Error\x20al\x20procesar\x20los\x20archivos.','#555555','441588HvjCwc','DOMContentLoaded',',\x20-1)\x22>▲</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22order-btn\x22\x20onclick=\x22moverArchivo(','push','file','9085930CVeNvB','status-unir','appendChild','length','div-file','change','generateAsync','create','file-item','files','PDFDocument','.tab-btn','className','Error\x20al\x20fusionar\x20los\x20archivos.\x20Revisa\x20que\x20no\x20estén\x20protegidos.','getPageCount','2065SbDTwt','Documento_Fusionado.pdf','div','26824nCJpky','success','1035CrPced','Procesando\x20y\x20estructurando\x20ZIP...','forEach','none','arrayBuffer','click','unir-label','_dividido.zip','add','sam-vigvita.github.io','\x20archivos\x20seleccionados','Éxito.\x20Se\x20procesaron\x20','disabled','error','btn-dividir','38CIBgHm','Seleccionar\x20o\x20arrastrar\x20PDFs','getPageIndices','getElementById','addPage','remove','innerHTML','replace','info','display','11022OKwJBD','target','copyPages','\x20archivos\x20en\x20un\x20solo\x20PDF.',',\x201)\x22>▼</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','from','save','hostname','name','load','classList','#111111','moverArchivo','\x20archivos\x20listos\x20para\x20ordenar'];_0xc98c=function(){return _0x477fd5;};return _0xc98c();}const divInput=document[_0x4e94c2(0x121)](_0x4e94c2(0xff)),divLabel=document['getElementById']('div-label');divInput[_0x4e94c2(0xed)](_0x4e94c2(0x100),()=>{const _0x5e4039={_0x474d68:0x104,_0x284767:0xe9,_0x3004d6:0x104,_0x9df545:0x104,_0x39d9ae:0xdc,_0x505a34:0xf5},_0x526224=_0x4e94c2;divInput[_0x526224(_0x5e4039._0x474d68)][_0x526224(0xfe)]>0x0?(divLabel[_0x526224(_0x5e4039._0x284767)]=divInput[_0x526224(0x104)][_0x526224(0xfe)]===0x1?divInput[_0x526224(_0x5e4039._0x3004d6)][0x0][_0x526224(0xd9)]:divInput[_0x526224(_0x5e4039._0x9df545)]['length']+_0x526224(0x119),divLabel[_0x526224(0xe5)][_0x526224(0xe7)]=_0x526224(_0x5e4039._0x39d9ae)):(divLabel[_0x526224(0xe9)]=_0x526224(0x11f),divLabel[_0x526224(0xe5)]['color']=_0x526224(_0x5e4039._0x505a34));}),document['getElementById'](_0x4e94c2(0x11d))[_0x4e94c2(0xed)](_0x4e94c2(0x114),async()=>{const _0x20535b={_0x947783:0x104,_0x1422a1:0x11c,_0x1936be:0x104,_0x15f421:0xda,_0x3c5f14:0x109,_0x523489:0xf9,_0x1a7720:0xfa,_0x19945e:0x101,_0xd0b537:0xd9,_0x2b8fe5:0x116,_0x25858c:0x11a,_0x5cd5c4:0xee},_0x4c978a=_0x4e94c2,_0x4421c2=document[_0x4c978a(0x121)](_0x4c978a(0xf3)),_0x3b28e2=document[_0x4c978a(0x121)](_0x4c978a(0x11d));if(divInput[_0x4c978a(_0x20535b._0x947783)][_0x4c978a(0xfe)]===0x0)return msg(_0x4421c2,_0x4c978a(0xe1),_0x4c978a(_0x20535b._0x1422a1));_0x3b28e2[_0x4c978a(0x11b)]=!![],msg(_0x4421c2,_0x4c978a(0x110),_0x4c978a(0xcf));try{const _0x4c8e47=new JSZip();let _0x3fc550=0x0,_0x48fe74=0x0;for(let _0x2672c9=0x0;_0x2672c9<divInput[_0x4c978a(_0x20535b._0x1936be)]['length'];_0x2672c9++){const _0xa1bd87=divInput[_0x4c978a(0x104)][_0x2672c9],_0x309eef=_0xa1bd87[_0x4c978a(0xd9)][_0x4c978a(0xce)](/\.[^/.]+$/,''),_0x4e1569=_0x4c8e47['folder'](_0x309eef),_0x312512=await PDFLib['PDFDocument'][_0x4c978a(_0x20535b._0x15f421)](await _0xa1bd87[_0x4c978a(0x113)]()),_0x32c473=_0x312512[_0x4c978a(_0x20535b._0x3c5f14)]();_0x3fc550+=_0x32c473;let _0x49e98b=0x1;for(let _0x1e9e7d=0x0;_0x1e9e7d<_0x32c473;_0x1e9e7d+=0x2){const _0x777c87=await PDFLib['PDFDocument'][_0x4c978a(0x102)](),_0x5724b4=[_0x1e9e7d];if(_0x1e9e7d+0x1<_0x32c473)_0x5724b4[_0x4c978a(_0x20535b._0x523489)](_0x1e9e7d+0x1);const _0x9915db=await _0x777c87[_0x4c978a(0xd3)](_0x312512,_0x5724b4);_0x9915db[_0x4c978a(0x111)](_0x207d3d=>_0x777c87[_0x4c978a(0xcb)](_0x207d3d)),_0x4e1569[_0x4c978a(_0x20535b._0x1a7720)](_0x309eef+'_'+_0x49e98b+_0x4c978a(0xdf),await _0x777c87['save']()),_0x49e98b++,_0x48fe74++;}}const _0x33c59e=await _0x4c8e47[_0x4c978a(_0x20535b._0x19945e)]({'type':'blob'});descargarBlob(_0x33c59e,divInput['files'][_0x4c978a(0xfe)]===0x1?divInput[_0x4c978a(0x104)][0x0][_0x4c978a(_0x20535b._0xd0b537)][_0x4c978a(0xce)](/\.[^/.]+$/,'')+_0x4c978a(_0x20535b._0x2b8fe5):'Lote_Dividido.zip'),msg(_0x4421c2,_0x4c978a(_0x20535b._0x25858c)+_0x3fc550+_0x4c978a(_0x20535b._0x5cd5c4),'success');}catch(_0x2f6f98){msg(_0x4421c2,_0x4c978a(0xf4),_0x4c978a(0x11c));}finally{_0x3b28e2[_0x4c978a(0x11b)]=![];}});const unirInput=document[_0x4e94c2(0x121)]('unir-file'),unirLabel=document[_0x4e94c2(0x121)](_0x4e94c2(0x115)),listaContenedor=document[_0x4e94c2(0x121)]('lista-archivos');function _0x56cb(_0x388074,_0x380e5d){_0x388074=_0x388074-0xcb;const _0xc98c79=_0xc98c();let _0x56cbe0=_0xc98c79[_0x388074];return _0x56cbe0;}let listaArchivosGlobal=[];unirInput[_0x4e94c2(0xed)](_0x4e94c2(0x100),()=>{const _0x2f5640={_0x5e4296:0xd6,_0x3f8d5c:0xfe},_0x414993=_0x4e94c2;unirInput[_0x414993(0x104)][_0x414993(0xfe)]>0x0&&(listaArchivosGlobal=Array[_0x414993(_0x2f5640._0x5e4296)](unirInput['files']),renderLista(),unirLabel[_0x414993(0xe9)]=listaArchivosGlobal[_0x414993(_0x2f5640._0x3f8d5c)]+_0x414993(0xde));});function renderLista(){const _0x46ea16={_0x34c923:0xcd,_0x2f7ce3:0x112,_0x3b0e05:0xe5,_0x230465:0xd0,_0x4c76bd:0x111},_0x360e83={_0x563100:0x10c,_0xfe65cb:0x103,_0x5d0903:0xcd,_0x97f5f0:0xf0,_0x37c0f3:0xf8,_0x168e8f:0xd5},_0x256d08=_0x4e94c2;listaContenedor[_0x256d08(_0x46ea16._0x34c923)]='';if(listaArchivosGlobal[_0x256d08(0xfe)]===0x0){listaContenedor[_0x256d08(0xe5)]['display']=_0x256d08(_0x46ea16._0x2f7ce3);return;}listaContenedor[_0x256d08(_0x46ea16._0x3b0e05)][_0x256d08(_0x46ea16._0x230465)]='block',listaArchivosGlobal[_0x256d08(_0x46ea16._0x4c76bd)]((_0x3bc178,_0x2ea87f)=>{const _0x5da6d5=_0x256d08,_0x64eb68=document['createElement'](_0x5da6d5(_0x360e83._0x563100));_0x64eb68[_0x5da6d5(0x107)]=_0x5da6d5(_0x360e83._0xfe65cb),_0x64eb68[_0x5da6d5(_0x360e83._0x5d0903)]=_0x5da6d5(_0x360e83._0x97f5f0)+(_0x2ea87f+0x1)+'.\x20'+_0x3bc178[_0x5da6d5(0xd9)]+'</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22file-actions\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22order-btn\x22\x20onclick=\x22moverArchivo('+_0x2ea87f+_0x5da6d5(_0x360e83._0x37c0f3)+_0x2ea87f+_0x5da6d5(_0x360e83._0x168e8f),listaContenedor[_0x5da6d5(0xfd)](_0x64eb68);});}window[_0x4e94c2(0xdd)]=function(_0x4cb2b6,_0x2a6869){const _0x28bf35={_0x459f34:0xfe},_0x20653d=_0x4e94c2,_0xd3e464=_0x4cb2b6+_0x2a6869;if(_0xd3e464<0x0||_0xd3e464>=listaArchivosGlobal[_0x20653d(_0x28bf35._0x459f34)])return;const _0x69af44=listaArchivosGlobal[_0x4cb2b6];listaArchivosGlobal[_0x4cb2b6]=listaArchivosGlobal[_0xd3e464],listaArchivosGlobal[_0xd3e464]=_0x69af44,renderLista();},document['getElementById'](_0x4e94c2(0xeb))['addEventListener'](_0x4e94c2(0x114),async()=>{const _0x39bb6a={_0x1d00d1:0xfc,_0x2e77c3:0x121,_0x146500:0xfe,_0x164a00:0xe4,_0x22870b:0xcf,_0x54ffea:0x102,_0x5a3dfa:0x120,_0x3c1942:0xd7,_0x4d8dcf:0xfe,_0x4f22e5:0xd4,_0x4d80e2:0x108},_0x5362d8=_0x4e94c2,_0x27cba8=document['getElementById'](_0x5362d8(_0x39bb6a._0x1d00d1)),_0x4233ad=document[_0x5362d8(_0x39bb6a._0x2e77c3)](_0x5362d8(0xeb));if(listaArchivosGlobal[_0x5362d8(_0x39bb6a._0x146500)]<0x2)return msg(_0x27cba8,_0x5362d8(_0x39bb6a._0x164a00),_0x5362d8(0x11c));_0x4233ad[_0x5362d8(0x11b)]=!![],msg(_0x27cba8,'Fusionando\x20documentos...\x20Por\x20favor\x20espera.',_0x5362d8(_0x39bb6a._0x22870b));try{const _0xa183cb=await PDFLib[_0x5362d8(0x105)][_0x5362d8(_0x39bb6a._0x54ffea)]();for(const _0xb5b7be of listaArchivosGlobal){const _0x23dc85=await PDFLib[_0x5362d8(0x105)]['load'](await _0xb5b7be[_0x5362d8(0x113)]()),_0x2774c2=await _0xa183cb['copyPages'](_0x23dc85,_0x23dc85[_0x5362d8(_0x39bb6a._0x5a3dfa)]());_0x2774c2['forEach'](_0x5bbdb1=>_0xa183cb[_0x5362d8(0xcb)](_0x5bbdb1));}const _0x568761=await _0xa183cb[_0x5362d8(_0x39bb6a._0x3c1942)](),_0x312f8d=new Blob([_0x568761],{'type':'application/pdf'});descargarBlob(_0x312f8d,_0x5362d8(0x10b)),msg(_0x27cba8,'¡Éxito!\x20Se\x20unieron\x20los\x20'+listaArchivosGlobal[_0x5362d8(_0x39bb6a._0x4d8dcf)]+_0x5362d8(_0x39bb6a._0x4f22e5),_0x5362d8(0x10e));}catch(_0x1d4575){msg(_0x27cba8,_0x5362d8(_0x39bb6a._0x4d80e2),_0x5362d8(0x11c));}finally{_0x4233ad[_0x5362d8(0x11b)]=![];}});function msg(_0x21c440,_0x117155,_0x2bcbdf){const _0xe0f5f1={_0xf6cce5:0x107},_0x53b4d6=_0x4e94c2;_0x21c440[_0x53b4d6(0xe9)]=_0x117155,_0x21c440[_0x53b4d6(_0xe0f5f1._0xf6cce5)]='status-box\x20'+_0x2bcbdf,_0x21c440[_0x53b4d6(0xe5)]['display']='block';}function descargarBlob(_0x5e56fd,_0x20be31){const _0x816a52={_0x4ad449:0xea,_0x3a4998:0xe8},_0x3e1bbe=_0x4e94c2,_0x969fd3=URL['createObjectURL'](_0x5e56fd),_0x5ad784=document[_0x3e1bbe(0xef)]('a');_0x5ad784['href']=_0x969fd3,_0x5ad784['download']=_0x20be31,document[_0x3e1bbe(_0x816a52._0x4ad449)]['appendChild'](_0x5ad784),_0x5ad784[_0x3e1bbe(0x114)](),document[_0x3e1bbe(0xea)][_0x3e1bbe(_0x816a52._0x3a4998)](_0x5ad784),URL['revokeObjectURL'](_0x969fd3);}
 </script>
 
 </body>
